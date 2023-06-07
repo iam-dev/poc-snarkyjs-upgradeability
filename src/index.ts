@@ -1,3 +1,3 @@
-import { Add } from './Add.js';
+import { WalletUnsecure, ModifiedWalletUnsecure } from './WalletUnsecure.js';
 
-export { Add };
+export { WalletUnsecure, ModifiedWalletUnsecure };
