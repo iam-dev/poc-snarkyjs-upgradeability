@@ -8,7 +8,7 @@ import {
   VerificationKey,
 } from 'snarkyjs';
 
-export class WalletUnsecure extends SmartContract {
+export class WalletBase extends SmartContract {
   @state(Field) num = State<Field>();
 
   init() {
@@ -16,9 +16,8 @@ export class WalletUnsecure extends SmartContract {
     this.account.permissions.set({
       ...Permissions.default(),
       send: Permissions.none(),
-      receive: Permissions.none(),
-      incrementNonce: Permissions.none(),
-      setVerificationKey: Permissions.none(),
+      receive: Permissions.proofOrSignature(),
+      setVerificationKey: Permissions.proofOrSignature(),
     });
     this.num.set(Field(1));
   }
@@ -28,9 +27,7 @@ export class WalletUnsecure extends SmartContract {
   }
 }
 
-export class ModifiedWalletUnsecure extends SmartContract {
-  @state(Field) num = State<Field>();
-
+export class WalletExtended extends WalletBase {
   @method update() {
     const currentState = this.num.getAndAssertEquals();
     const newState = currentState.add(2);

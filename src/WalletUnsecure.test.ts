@@ -17,10 +17,8 @@ describe('WalletUnsecure', () => {
     hackerAccount: PublicKey,
     hackerKey: PrivateKey,
     zkAppAddress: PublicKey,
-    zkAppAddress2: PublicKey,
     zkAppPrivateKey: PrivateKey,
     zkApp: WalletUnsecure,
-    zkAppPrivateKey2: PrivateKey,
     zkApp2: ModifiedWalletUnsecure;
 
   const amount: UInt64 = UInt64.from(10);
@@ -45,9 +43,7 @@ describe('WalletUnsecure', () => {
     zkAppPrivateKey = PrivateKey.random();
     zkAppAddress = zkAppPrivateKey.toPublicKey();
     zkApp = new WalletUnsecure(zkAppAddress);
-    zkAppPrivateKey2 = PrivateKey.random();
-    zkAppAddress2 = zkAppPrivateKey2.toPublicKey();
-    zkApp2 = new ModifiedWalletUnsecure(zkAppAddress2);
+    zkApp2 = new ModifiedWalletUnsecure(zkAppAddress);
   });
 
   async function localDeploy() {
@@ -131,18 +127,17 @@ describe('WalletUnsecure', () => {
   describe('#updateVerificationKey', () => {
     it('updateVerificationKey the `WalletUnsecure` smart contract', async () => {
       await localDeploy();
-
       let modified = await ModifiedWalletUnsecure.compile();
 
       // upgrade transaction
       const txn = await Mina.transaction(hackerAccount, () => {
         zkApp.updateVerificationKey(modified.verificationKey);
-        AccountUpdate.fundNewAccount(hackerAccount);
-        zkApp2.deploy();
       });
       await txn.prove();
-      await txn.sign([hackerKey, zkAppPrivateKey2]).send();
+      await txn.sign([hackerKey]).send();
     });
+  });
+  describe('#update', () => {
     beforeEach(async () => {
       await localDeploy();
 
@@ -151,15 +146,11 @@ describe('WalletUnsecure', () => {
       // upgrade transaction
       const txn = await Mina.transaction(hackerAccount, () => {
         zkApp.updateVerificationKey(modified.verificationKey);
-        AccountUpdate.fundNewAccount(hackerAccount);
-        zkApp2.deploy();
       });
       await txn.prove();
-      await txn.sign([hackerKey, zkAppPrivateKey2]).send();
+      await txn.sign([hackerKey]).send();
     });
     it('correctly updates the num state on the `ModifiedWalletUnsecure` smart contract', async () => {
-      await localDeploy();
-
       // update transaction
       const txn = await Mina.transaction(hackerAccount, () => {
         zkApp2.update();
@@ -167,7 +158,7 @@ describe('WalletUnsecure', () => {
       await txn.prove();
       await txn.sign([hackerKey]).send();
 
-      const updatedNum = zkApp.num.get();
+      const updatedNum = zkApp2.num.get();
       expect(updatedNum).toEqual(Field(3));
     });
   });
